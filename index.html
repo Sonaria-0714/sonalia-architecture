@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>SONALIA: HUMAN INTELLIGENCE MODEL</title>
+    <title>SONALIA: HORIZONTAL MODEL</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; user-select: none; }
         canvas { display: block; }
@@ -11,59 +11,46 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         
         #hud-title {
-            position: absolute; top: 40px; left: 40px;
+            position: absolute; top: 30px; left: 30px;
             border-left: 4px solid #00ffff; padding-left: 20px;
             background: linear-gradient(90deg, rgba(0,20,30,0.8), transparent);
         }
-        h1 { margin: 0; font-size: 32px; color: #fff; text-shadow: 0 0 20px #00ffff; letter-spacing: 4px; }
+        h1 { margin: 0; font-size: 32px; color: #fff; text-shadow: 0 0 20px #00ffff; letter-spacing: 2px; }
         p { margin: 5px 0 0; color: #00ffff; font-size: 14px; letter-spacing: 2px; }
 
-        /* C:F バランスメーター */
-        #cf-meter-box {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 400px; text-align: center;
+        /* C:F METER */
+        #cf-meter {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 300px; text-align: center;
         }
-        .cf-label { color: #88aaff; font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; }
-        .meter-bg {
-            width: 100%; height: 6px; background: #333; border-radius: 3px; position: relative;
-            box-shadow: 0 0 10px rgba(0,255,255,0.2);
-        }
-        .meter-bar {
-            position: absolute; top: 0; left: 50%; width: 4px; height: 16px; background: #fff;
-            transform: translate(-50%, -5px); box-shadow: 0 0 10px #fff;
-            transition: left 0.5s;
-        }
-        .meter-fill-c { position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #00ffff, transparent); opacity: 0.3; }
-        .meter-fill-f { position: absolute; top: 0; right: 0; height: 100%; width: 50%; background: linear-gradient(-90deg, #ff0055, transparent); opacity: 0.3; }
-        .cf-text { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #aaa; }
+        .meter-bar { width: 100%; height: 4px; background: #333; position: relative; margin: 10px 0; }
+        .meter-knob { width: 10px; height: 20px; background: #fff; position: absolute; top: -8px; left: 50%; transition: left 0.5s; box-shadow: 0 0 10px #fff; }
+        .cf-labels { display: flex; justify-content: space-between; color: #aaa; font-size: 10px; letter-spacing: 1px; }
 
-        /* 詳細パネル */
+        /* PANEL */
         #panel {
-            position: absolute; top: 0; right: 0; width: 380px; height: 100%;
-            background: rgba(8, 12, 16, 0.95); border-left: 1px solid #333;
-            transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            color: #eee; display: flex; flex-direction: column; z-index: 20; pointer-events: auto;
-            backdrop-filter: blur(10px);
+            position: absolute; top: 0; right: 0; width: 350px; height: 100%;
+            background: rgba(10, 15, 20, 0.95); border-left: 1px solid #333;
+            transform: translateX(100%); transition: 0.3s; pointer-events: auto;
+            color: #eee; display: flex; flex-direction: column; z-index: 20;
         }
         #panel.active { transform: translateX(0); }
-        .p-head { padding: 40px 30px; border-bottom: 1px solid #333; background: linear-gradient(180deg, rgba(0,255,255,0.1), transparent); }
-        .p-tag { font-size: 10px; padding: 3px 8px; border-radius: 2px; background: #00ffff; color: #000; font-weight: bold; }
-        .p-title { font-size: 28px; margin: 15px 0 0; color: #fff; text-shadow: 0 0 10px currentColor; }
+        .p-head { padding: 30px; border-bottom: 1px solid #333; background: linear-gradient(180deg, rgba(0,255,255,0.1), transparent); }
+        .p-tag { font-size: 10px; background: #00ffff; color: #000; padding: 2px 8px; border-radius: 2px; font-weight: bold; }
+        .p-title { font-size: 24px; margin: 15px 0 0; color: #fff; }
         .p-body { padding: 30px; overflow-y: auto; flex: 1; }
-        .row { margin-bottom: 30px; }
-        .label { font-size: 11px; color: #00ffff; border-bottom: 1px solid rgba(255,255,255,0.2); display: block; margin-bottom: 8px; letter-spacing: 1px; }
-        .text { font-size: 14px; line-height: 1.7; color: #ccc; }
-        .thought { font-family: monospace; color: #fff; background: rgba(0,255,255,0.05); padding: 15px; border-left: 3px solid #00ffff; }
-        .close-btn { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #777; }
-        .close-btn:hover { color: #fff; }
+        .row { margin-bottom: 25px; }
+        .label { font-size: 10px; color: #00ffff; display: block; margin-bottom: 5px; border-bottom: 1px solid #333; }
+        .text { font-size: 13px; line-height: 1.6; color: #ccc; }
+        .close-btn { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #fff; }
 
-        /* ローダー */
+        /* LOADER */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s; cursor: pointer;
+            transition: opacity 0.5s; cursor: pointer;
         }
-        .load-text { font-size: 40px; color: #fff; font-weight: bold; letter-spacing: 5px; text-shadow: 0 0 20px #00ffff; }
+        .load-text { font-size: 40px; color: #fff; font-weight: bold; text-shadow: 0 0 20px #00ffff; }
         .load-sub { color: #00ffff; font-family: monospace; margin-top: 10px; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
     </style>
@@ -76,7 +63,7 @@
 
     <div id="loader" onclick="startApp()">
         <div class="load-text">SONALIA</div>
-        <div class="load-sub">LOADING HUMAN INTELLIGENCE MODEL...</div>
+        <div class="load-sub">LOADING HORIZONTAL MODEL...</div>
     </div>
 
     <div id="ui-layer">
@@ -84,18 +71,9 @@
             <h1>人体構造モデル</h1>
             <p>INPUT » OS » DB » FACTOR » OUTPUT</p>
         </div>
-        
-        <div id="cf-meter-box">
-            <div class="cf-label">DECISION BALANCE (C:F)</div>
-            <div class="meter-bg">
-                <div class="meter-fill-c"></div>
-                <div class="meter-fill-f"></div>
-                <div class="meter-bar" id="meter-indicator"></div>
-            </div>
-            <div class="cf-text">
-                <span>COGNITION (思考)</span>
-                <span>FEELING (感情)</span>
-            </div>
+        <div id="cf-meter">
+            <div class="cf-labels"><span>COGNITION</span><span>FEELING</span></div>
+            <div class="meter-bar"><div class="meter-knob" id="knob"></div></div>
         </div>
     </div>
 
@@ -107,46 +85,46 @@
         </div>
         <div class="p-body">
             <div class="row"><span class="label">DEFINITION</span><div class="text" id="p-desc">...</div></div>
-            <div class="row"><span class="label">SYSTEM ROLE</span><div class="text" id="p-role">...</div></div>
-            <div class="row"><span class="label">INTERNAL VOICE</span><div class="thought" id="p-thought">...</div></div>
+            <div class="row"><span class="label">ROLE</span><div class="text" id="p-role">...</div></div>
+            <div class="row"><span class="label">THOUGHT</span><div class="text" id="p-thought" style="color:#fff; font-family:monospace;">...</div></div>
         </div>
     </div>
 
     <canvas id="canvas"></canvas>
 
     <script>
-        // --- DATA DEFINITION ---
+        // --- DATA (Horizontal Layout: X-Axis) ---
+        // 頭(左: -150) -> 足(右: +150)
         const DATA = [
-            // --- 1. HEAD (Input) ---
-            { id:"SENSE", type:"INPUT", name:"五感入力", color:0xFFFFFF, y:140, desc:"視覚・聴覚などの外界情報。", role:"情報収集", thought:"(Sensing...)" },
+            // 1. HEAD (Input)
+            { id:"SENSE", type:"INPUT", name:"五感入力", color:0xFFFFFF, x:-160, desc:"外界からの情報取得。", role:"Input", thought:"(Sensing...)" },
             
-            // --- 2. CHEST (OS Layers) ---
-            { id:"OS4", type:"OS(4層)", name:"時間/協調", color:0xFFD700, y:90, desc:"過去未来・自他バランス。", role:"大局観", thought:"「将来は？相手は？」" },
-            { id:"OS3", type:"OS(3層)", name:"報酬/意味", color:0xAA00FF, y:75, desc:"損得・意義の判断。", role:"価値判断", thought:"「得か？意味あるか？」" },
-            { id:"OS2", type:"OS(2層)", name:"評価/所属", color:0x3388FF, y:60, desc:"善悪・集団帰属。", role:"社会性", thought:"「正しいか？浮いてないか？」" },
-            { id:"OS1", type:"OS(1層)", name:"生存/生活", color:0x00FFFF, y:45, desc:"安全・ルーティン。", role:"生存本能", thought:"「危なくないか？いつも通りか？」" },
+            // 2. CHEST (OS Layers)
+            { id:"OS4", type:"OS(4層)", name:"時間/協調", color:0xFFD700, x:-100, desc:"過去未来・自他バランス。", role:"大局観", thought:"「将来は？相手は？」" },
+            { id:"OS3", type:"OS(3層)", name:"報酬/意味", color:0xAA00FF, x:-80, desc:"損得・意義の判断。", role:"価値判断", thought:"「得か？意味あるか？」" },
+            { id:"OS2", type:"OS(2層)", name:"評価/所属", color:0x3388FF, x:-60, desc:"善悪・集団帰属。", role:"社会性", thought:"「正しいか？浮いてないか？」" },
+            { id:"OS1", type:"OS(1層)", name:"生存/生活", color:0x00FFFF, x:-40, desc:"安全・ルーティン。", role:"生存本能", thought:"「危なくないか？」" },
 
-            // --- 3. STOMACH (DB Core) ---
-            { id:"DB_DESIRE", type:"DB", name:"欲求DB", color:0xFF5500, y:10, x:-20, z:20, desc:"根源的渇望。", role:"Motivation", thought:"(Deep Desire)" },
-            { id:"DB_EMOTION", type:"DB", name:"情動DB", color:0x0044FF, y:10, x:20, z:20, desc:"感情記憶。", role:"Emotion", thought:"(Flashback)" },
-            { id:"DB_VALUE", type:"DB", name:"価値観DB", color:0xFFCC00, y:10, x:20, z:-20, desc:"信念・ルール。", role:"Belief", thought:"(Core Rule)" },
-            { id:"DB_IMPLICIT", type:"DB", name:"無意識DB", color:0x888888, y:10, x:-20, z:-20, desc:"反射的クセ。", role:"Reflex", thought:"(Auto-Pilot)" },
+            // 3. STOMACH (DB Core)
+            { id:"DB_DESIRE", type:"DB", name:"欲求DB", color:0xFF5500, x:10, y:25, z:0, desc:"根源的渇望。", role:"Motivation", thought:"(Deep Desire)" },
+            { id:"DB_EMOTION", type:"DB", name:"情動DB", color:0x0044FF, x:10, y:-25, z:0, desc:"感情記憶。", role:"Emotion", thought:"(Flashback)" },
+            { id:"DB_VALUE", type:"DB", name:"価値観DB", color:0xFFCC00, x:10, y:0, z:25, desc:"信念・ルール。", role:"Belief", thought:"(Core Rule)" },
+            { id:"DB_IMPLICIT", type:"DB", name:"無意識DB", color:0x888888, x:10, y:0, z:-25, desc:"反射的クセ。", role:"Reflex", thought:"(Auto-Pilot)" },
 
-            // --- 4. WAIST (Factors Engine) ---
-            { id:"IQ", type:"係数", name:"IQ", color:0x00CCFF, y:-30, angle:0, desc:"論理力。", role:"Logic", thought:"分析" },
-            { id:"EQ", type:"係数", name:"EQ", color:0xFF6666, y:-30, angle:1, desc:"感情力。", role:"Empathy", thought:"共感" },
-            { id:"SQ", type:"係数", name:"SQ", color:0xFFCC00, y:-30, angle:2, desc:"社会性。", role:"Social", thought:"適応" },
-            { id:"AQ", type:"係数", name:"AQ", color:0x888888, y:-30, angle:3, desc:"逆境力。", role:"Resilience", thought:"忍耐" },
-            { id:"CQ", type:"係数", name:"CQ", color:0xAA00FF, y:-30, angle:4, desc:"創造力。", role:"Idea", thought:"発想" },
-            { id:"HQ", type:"係数", name:"HQ", color:0xFFFFFF, y:-30, angle:5, desc:"人間力。", role:"Ethics", thought:"誠実" },
-            { id:"MQ", type:"係数", name:"MQ", color:0xFF3300, y:-30, angle:6, desc:"行動力。", role:"Action", thought:"実行" },
-            { id:"KQ", type:"係数", name:"KQ", color:0x00FF88, y:-30, angle:7, desc:"知識力。", role:"Know-How", thought:"応用" },
+            // 4. WAIST (Factors)
+            { id:"IQ", type:"係数", name:"IQ", color:0x00CCFF, x:60, angle:0, desc:"論理力。", role:"Logic", thought:"分析" },
+            { id:"EQ", type:"係数", name:"EQ", color:0xFF6666, x:60, angle:1, desc:"感情力。", role:"Empathy", thought:"共感" },
+            { id:"SQ", type:"係数", name:"SQ", color:0xFFCC00, x:60, angle:2, desc:"社会性。", role:"Social", thought:"適応" },
+            { id:"AQ", type:"係数", name:"AQ", color:0x888888, x:60, angle:3, desc:"逆境力。", role:"Resilience", thought:"忍耐" },
+            { id:"CQ", type:"係数", name:"CQ", color:0xAA00FF, x:60, angle:4, desc:"創造力。", role:"Idea", thought:"発想" },
+            { id:"HQ", type:"係数", name:"HQ", color:0xFFFFFF, x:60, angle:5, desc:"人間力。", role:"Ethics", thought:"誠実" },
+            { id:"MQ", type:"係数", name:"MQ", color:0xFF3300, x:60, angle:6, desc:"行動力。", role:"Action", thought:"実行" },
+            { id:"KQ", type:"係数", name:"KQ", color:0x00FF88, x:60, angle:7, desc:"知識力。", role:"Know-How", thought:"応用" },
 
-            // --- 5. FEET (Output) ---
-            { id:"OUT", type:"OUTPUT", name:"行動出力", color:0xFFFFFF, y:-100, desc:"最終的な言動・表情。", role:"Expression", thought:"(Act)" }
+            // 5. FEET (Output)
+            { id:"OUT", type:"OUTPUT", name:"行動出力", color:0xFFFFFF, x:140, desc:"最終的な言動。", role:"Output", thought:"(Act)" }
         ];
 
-        // --- MAIN SYSTEM ---
         let scene, camera, renderer, controls;
         let humanGroup, glowTex;
         const interactables = [];
@@ -159,7 +137,7 @@
             scene.fog = new THREE.FogExp2(0x000000, 0.001);
 
             camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 3000);
-            camera.position.set(0, 20, 420);
+            camera.position.set(0, 50, 450); // 正面（横向き）が見やすい位置
 
             renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('canvas') });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -167,20 +145,18 @@
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.autoRotate = true;
-            controls.autoRotateSpeed = 0.5;
+            controls.autoRotate = false; // 手動で見てもらうためOFF
 
             humanGroup = new THREE.Group();
             scene.add(humanGroup);
 
             glowTex = createGlowTex();
 
-            // Build Components
-            buildHumanSilhouette();
+            buildHorizontalBody();
             buildSystem();
             buildFlow();
 
-            // Events
+            // Event Listeners
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mousedown', onMouseDown);
             window.addEventListener('resize', onResize);
@@ -189,7 +165,6 @@
             setTimeout(startApp, 1500);
         }
 
-        // Texture
         function createGlowTex() {
             const c = document.createElement('canvas'); c.width=64; c.height=64;
             const ctx = c.getContext('2d');
@@ -201,22 +176,25 @@
             return new THREE.CanvasTexture(c);
         }
 
-        // 1. Human Silhouette
-        function buildHumanSilhouette() {
+        // 1. Horizontal Human Body
+        function buildHorizontalBody() {
             const pGeo = new THREE.Geometry();
-            for(let i=0; i<1200; i++) {
-                const y = (Math.random() * 280) - 120; // Height range
-                let radius = 0;
-                // Shape Logic
-                if (y > 110) radius = 25; // Head
-                else if (y > 90) radius = 15; // Neck
-                else if (y > 20) radius = 55; // Chest
-                else if (y > -40) radius = 45; // Waist
-                else radius = 50; // Legs
+            for(let i=0; i<1500; i++) {
+                const x = (Math.random() * 320) - 160; // Length
+                let rMax = 0;
+                
+                // Horizontal shape definition
+                if (x < -130) rMax = 25; // Head
+                else if (x < -110) rMax = 15; // Neck
+                else if (x < -30) rMax = 55; // Chest
+                else if (x < 40) rMax = 45; // Waist
+                else rMax = 50; // Legs
 
-                const angle = Math.random() * Math.PI * 2;
-                const r = Math.random() * radius;
-                pGeo.vertices.push(new THREE.Vector3(Math.cos(angle)*r, y, Math.sin(angle)*r));
+                const ang = Math.random() * Math.PI * 2;
+                const r = Math.random() * rMax;
+                
+                // X is length, Y/Z are thickness
+                pGeo.vertices.push(new THREE.Vector3(x, Math.cos(ang)*r, Math.sin(ang)*r));
             }
             const pMat = new THREE.PointsMaterial({ color: 0x004466, size: 2, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
             humanGroup.add(new THREE.Points(pGeo, pMat));
@@ -224,22 +202,24 @@
 
         // 2. System Nodes
         function buildSystem() {
-            // Central Spine
+            // Spine Line
             const lineGeo = new THREE.Geometry();
-            lineGeo.vertices.push(new THREE.Vector3(0, 160, 0), new THREE.Vector3(0, -110, 0));
-            humanGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x00ffff, opacity: 0.3, transparent: true })));
+            lineGeo.vertices.push(new THREE.Vector3(-160, 0, 0), new THREE.Vector3(150, 0, 0));
+            humanGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color:0x00ffff, opacity:0.3, transparent:true})));
 
             DATA.forEach(d => {
                 let mesh;
-                // Create Geometry based on type
                 if (d.type.includes("OS")) {
-                    const geo = new THREE.TorusGeometry(38, 0.3, 16, 64);
-                    mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.8 }));
-                    mesh.rotation.x = Math.PI/2;
-                    mesh.position.y = d.y;
-                    // Hit area (invisible sphere for easier click)
-                    const hit = new THREE.Mesh(new THREE.SphereGeometry(38,8,8), new THREE.MeshBasicMaterial({visible:false}));
-                    hit.position.y = d.y;
+                    // Ring (Torus) oriented along X-axis
+                    const geo = new THREE.TorusGeometry(40, 0.5, 16, 64);
+                    mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.5 }));
+                    mesh.rotation.y = Math.PI/2; // Rotate to face X
+                    mesh.position.x = d.x;
+                    
+                    // Click Hitbox
+                    const hit = new THREE.Mesh(new THREE.CylinderGeometry(40,40,5,16), new THREE.MeshBasicMaterial({visible:false}));
+                    hit.rotation.z = Math.PI/2;
+                    hit.position.x = d.x;
                     hit.userData = { data: d };
                     interactables.push(hit);
                     humanGroup.add(hit);
@@ -251,22 +231,28 @@
                     interactables.push(mesh);
 
                 } else if (d.type === "係数") {
-                    const r = 55;
+                    const r = 60;
                     const ang = (d.angle / 8) * Math.PI * 2;
                     mesh = new THREE.Mesh(new THREE.BoxGeometry(8,8,8), new THREE.MeshBasicMaterial({ color: d.color, wireframe: true }));
-                    mesh.position.set(Math.cos(ang)*r, d.y, Math.sin(ang)*r);
+                    mesh.position.set(d.x, Math.cos(ang)*r, Math.sin(ang)*r);
                     mesh.userData = { data: d };
                     interactables.push(mesh);
+
                 } else if (d.id === "SENSE") {
-                    mesh = new THREE.Mesh(new THREE.SphereGeometry(3), new THREE.MeshBasicMaterial({color:0xffffff}));
-                    mesh.position.y = d.y;
+                    mesh = new THREE.Mesh(new THREE.SphereGeometry(4), new THREE.MeshBasicMaterial({color:0xffffff}));
+                    mesh.position.x = d.x;
+                    mesh.userData = { data: d };
+                    interactables.push(mesh);
+                } else if (d.id === "OUT") {
+                    mesh = new THREE.Mesh(new THREE.SphereGeometry(4), new THREE.MeshBasicMaterial({color:0xffffff}));
+                    mesh.position.x = d.x;
                     mesh.userData = { data: d };
                     interactables.push(mesh);
                 }
 
                 if(mesh) {
                     const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: d.color, blending: THREE.AdditiveBlending }));
-                    spr.scale.set(30,30,1);
+                    spr.scale.set(40,40,1);
                     mesh.add(spr);
                     humanGroup.add(mesh);
                 }
@@ -277,47 +263,45 @@
         const flowParticles = [];
         function buildFlow() {
             const pGeo = new THREE.Geometry();
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<150; i++) {
                 const v = new THREE.Vector3(0,0,0);
                 pGeo.vertices.push(v);
                 flowParticles.push({
                     vec: v,
-                    y: 150 + Math.random() * 50,
-                    x: (Math.random()-0.5) * 30,
-                    z: (Math.random()-0.5) * 30,
-                    speed: 1 + Math.random() * 2
+                    x: -170 + Math.random() * 50,
+                    y: (Math.random()-0.5)*40,
+                    z: (Math.random()-0.5)*40,
+                    speed: 2 + Math.random() * 3
                 });
             }
             const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2, map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite:false });
             humanGroup.add(new THREE.Points(pGeo, pMat));
         }
 
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             TWEEN.update();
             controls.update();
-            
             const time = clock.getElapsedTime();
-            
-            // Breathe
-            const scale = 1 + Math.sin(time)*0.01;
-            humanGroup.scale.set(scale, scale, scale);
-            humanGroup.rotation.y = Math.sin(time*0.1)*0.1;
+
+            // Pulse
+            const s = 1 + Math.sin(time)*0.01;
+            humanGroup.scale.set(1, s, s);
 
             // Flow
             flowParticles.forEach(p => {
-                p.y -= p.speed;
-                const angle = time + p.y * 0.05;
-                const r = 15 * (1 - (p.y + 100)/250); 
-                p.vec.set(Math.cos(angle)*r, p.y, Math.sin(angle)*r);
-                if (p.y < -120) p.y = 150;
+                p.x += p.speed;
+                // Spiral
+                const r = 20 * (1 - (p.x + 160)/320);
+                const ang = time*2 + p.x*0.05;
+                p.vec.set(p.x, Math.cos(ang)*r, Math.sin(ang)*r);
+                if (p.x > 150) p.x = -170;
             });
             humanGroup.children[humanGroup.children.length-1].geometry.verticesNeedUpdate = true;
 
-            // C:F Meter Animation (Simulate processing)
-            const meterVal = 50 + Math.sin(time * 0.5) * 30; // 20% to 80%
-            document.getElementById('meter-indicator').style.left = meterVal + '%';
+            // C:F Meter Animation
+            const knob = document.getElementById('knob');
+            if(knob) knob.style.left = (50 + Math.sin(time)*30) + '%';
 
             renderer.render(scene, camera);
         }
@@ -326,7 +310,6 @@
         function onMouseMove(e) {
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            // Cursor style
             raycaster.setFromCamera(mouse, camera);
             const hits = raycaster.intersectObjects(interactables);
             document.body.style.cursor = hits.length > 0 ? 'pointer' : 'default';
@@ -337,8 +320,8 @@
             raycaster.setFromCamera(mouse, camera);
             const hits = raycaster.intersectObjects(interactables);
             if(hits.length > 0) {
-                const target = hits[0].object;
-                showPanel(target.userData.data);
+                const target = hits[0];
+                showPanel(target.object.userData.data);
             } else {
                 closePanel();
             }
